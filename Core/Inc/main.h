@@ -55,6 +55,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void SDRAM_Test(void);
 
 /* USER CODE END EFP */
 

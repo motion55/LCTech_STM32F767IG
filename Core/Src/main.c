@@ -29,6 +29,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stm32746g_sdram.h"
+#include "debug_console.h"
 
 /* USER CODE END Includes */
 
@@ -49,7 +51,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+#define BUFFER_SIZE         ((uint32_t)0x1000)
+#define WRITE_READ_ADDR     ((uint32_t)0x0800)
+/* Read/Write Buffers */
+uint32_t aTxBuffer[BUFFER_SIZE];
+uint32_t aRxBuffer[BUFFER_SIZE];
+/* Status variables */
+__IO uint32_t uwWriteReadStatus = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +105,9 @@ int main(void)
   MX_QUADSPI_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-
+#ifdef _JEIL_DEBUG_H_
+  DebugInit();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,10 +117,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#ifndef _JEIL_DEBUG_H_
     HAL_GPIO_WritePin(LED_Out_GPIO_Port, LED_Out_Pin, GPIO_PIN_SET);
     HAL_Delay(250);
     HAL_GPIO_WritePin(LED_Out_GPIO_Port, LED_Out_Pin, GPIO_PIN_RESET);
     HAL_Delay(250);
+#else
+    HAL_Delay(500);
+#endif
   }
   /* USER CODE END 3 */
 }
@@ -180,7 +194,74 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_Delay(uint32_t Delay)
+{
+  uint32_t tickstart = HAL_GetTick();
+  uint32_t wait = Delay;
 
+  /* Add a freq to guarantee minimum wait */
+  if (wait < HAL_MAX_DELAY)
+  {
+    wait += (uint32_t)(uwTickFreq);
+  }
+
+  while ((HAL_GetTick() - tickstart) < wait)
+  {
+#ifdef _JEIL_DEBUG_H_
+	  DebugTask();
+#endif
+  }
+}
+
+void SDRAM_Test(void)
+{
+	DebugPrint("\r\n SDRAM example !!!\r\n");
+	/* Program the SDRAM external device */
+	/*##-1- Configure the SDRAM device #########################################*/
+	/* SDRAM device configuration */
+	BSP_SDRAM_Init();
+
+	HAL_Delay(10);
+
+	/*##-2- SDRAM memory read/write access #####################################*/
+	/* Fill the buffer to write */
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		aTxBuffer[i] = 0xC178A562 + i; /* TxBuffer init */
+	}
+
+	/* Write data to the SDRAM memory */
+	BSP_SDRAM_WriteData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aTxBuffer,	BUFFER_SIZE);
+	DebugPrint("\r\n/* Write data to the SDRAM memory */\r\n\r\n");
+//	for (int i = 0; i < BUFFER_SIZE; i++) {
+//		DebugPrint("%02X:0x%08lX ", i, aTxBuffer[i]);
+//		HAL_Delay(2);
+//	}
+//	DebugPrint("\r\n");
+
+	HAL_Delay(200);
+
+	/* Read back data from the SDRAM memory */
+	BSP_SDRAM_ReadData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aRxBuffer, BUFFER_SIZE);
+	DebugPrint("\r\n/* Read back data from the SDRAM memory */\r\n\r\n");
+//	for (int i = 0; i < BUFFER_SIZE; i++) {
+//		DebugPrint("%02X:0x%08lX ", i, aRxBuffer[i]);
+//		HAL_Delay(2);
+//	}
+//	DebugPrint("\r\n");
+
+	HAL_Delay(200);
+
+	/*##-3- Checking data integrity ############################################*/
+	for (int i = 0; (i < BUFFER_SIZE); i++) {
+		if (aRxBuffer[i] != aTxBuffer[i]) {
+			uwWriteReadStatus++;
+		}
+	}
+	if (uwWriteReadStatus == 0) /* check date */
+		DebugPrint("\r\n SDRAM Test OK\r\n");
+	else
+		DebugPrint("\r\n SDRAM Test False\r\n");
+}
 /* USER CODE END 4 */
 
 /**
