@@ -30,6 +30,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32746g_sdram.h"
+#include "stm32746g_qspi.h"
 #include "debug_console.h"
 
 /* USER CODE END Includes */
@@ -58,6 +59,7 @@ uint32_t aTxBuffer[BUFFER_SIZE];
 uint32_t aRxBuffer[BUFFER_SIZE];
 /* Status variables */
 __IO uint32_t uwWriteReadStatus = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -231,24 +233,22 @@ void SDRAM_Test(void)
 
 	/* Write data to the SDRAM memory */
 	BSP_SDRAM_WriteData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aTxBuffer,	BUFFER_SIZE);
-	DebugPrint("\r\n/* Write data to the SDRAM memory */\r\n\r\n");
+	DebugPrint(" /* Write data to the SDRAM memory */\r\n");
 //	for (int i = 0; i < BUFFER_SIZE; i++) {
 //		DebugPrint("%02X:0x%08lX ", i, aTxBuffer[i]);
 //		HAL_Delay(2);
 //	}
 //	DebugPrint("\r\n");
-
 	HAL_Delay(200);
 
 	/* Read back data from the SDRAM memory */
 	BSP_SDRAM_ReadData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aRxBuffer, BUFFER_SIZE);
-	DebugPrint("\r\n/* Read back data from the SDRAM memory */\r\n\r\n");
+	DebugPrint(" /* Read back data from the SDRAM memory */\r\n");
 //	for (int i = 0; i < BUFFER_SIZE; i++) {
 //		DebugPrint("%02X:0x%08lX ", i, aRxBuffer[i]);
 //		HAL_Delay(2);
 //	}
 //	DebugPrint("\r\n");
-
 	HAL_Delay(200);
 
 	/*##-3- Checking data integrity ############################################*/
@@ -258,9 +258,174 @@ void SDRAM_Test(void)
 		}
 	}
 	if (uwWriteReadStatus == 0) /* check date */
-		DebugPrint("\r\n SDRAM Test OK\r\n");
+		DebugPrint(" SDRAM Test OK\r\n");
 	else
-		DebugPrint("\r\n SDRAM Test False\r\n");
+		DebugPrint(" SDRAM Test False\r\n");
+}
+
+void W25Q_QUADSPI_Test(void)
+{
+	QSPI_CommandTypeDef s_command;
+	uint8_t wData[0x100];
+	uint8_t rData[0x100];
+	uint8_t pData[3];
+
+	DebugPrint("\r\n  W25Q256JV QuadSPI Test....\r\n");
+	HAL_Delay(10);
+	/*##-1- Initialize W25Q128FV  ###########################################*/
+	BSP_QSPI_Init();
+
+	/*##-2-Read Device ID Test    ###########################################*/
+	/* Read Manufacture/Device ID */
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	s_command.Instruction = READ_ID_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
+	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.Address = 0x000000;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_1_LINE;
+	s_command.DummyCycles = 0;
+	s_command.NbData = 2;
+	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command send1 fail.\r\n");
+		HAL_Delay(100);
+	}
+	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command receive1 fail.\r\n");
+		HAL_Delay(100);
+	}
+	DebugPrint("SPI I/0 Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
+	HAL_Delay(10);
+
+	/* Read Manufacture/Device ID Dual I/O*/
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	s_command.Instruction = DUAL_READ_ID_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_2_LINES;
+	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.Address = 0x000000;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_2_LINES;
+	s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	s_command.AlternateBytes = 0;
+	s_command.DataMode = QSPI_DATA_2_LINES;
+	s_command.DummyCycles = 0;
+	s_command.NbData = 4;
+	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command send2 fail.\r\n");
+		HAL_Delay(100);
+	}
+	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command receive2 fail.\r\n");
+		HAL_Delay(100);
+	}
+	DebugPrint("Dual I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
+	HAL_Delay(10);
+
+	/* Read Manufacture/Device ID Quad I/O*/
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	s_command.Instruction = QUAD_READ_ID_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_4_LINES;
+	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.Address = 0x000000;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
+	s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	s_command.AlternateBytes = 0x00;
+	s_command.DataMode = QSPI_DATA_4_LINES;
+	s_command.DummyCycles = 4;
+	s_command.NbData = 2;
+	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command send3 fail.\r\n");
+		HAL_Delay(100);
+	}
+	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command receive3 fail.\r\n");
+		HAL_Delay(100);
+	}
+	DebugPrint("Quad I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
+	HAL_Delay(10);
+
+	/* Read JEDEC ID */
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	s_command.Instruction = READ_JEDEC_ID_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_NONE;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_1_LINE;
+	s_command.DummyCycles = 0;
+	s_command.NbData = 3;
+	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command send4 fail.\r\n");
+		HAL_Delay(100);
+	}
+	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		DebugPrint("Read Manufacture/Device ID command receive4 fail.\r\n");
+		HAL_Delay(100);
+	}
+	DebugPrint("Read JEDEC ID :  0x%2X 0x%2X 0x%2X\r\n", pData[0], pData[1], pData[2]);
+	HAL_Delay(10);
+
+	/*##-3-QSPI Erase/Write/Read Test    ###########################################*/
+	/* fill buffer */
+	for (uint32_t i = 0; i < 0x100; i++) {
+		wData[i] = i;
+		rData[i] = 0;
+	}
+
+	if (BSP_QSPI_Erase_Block(0) == QSPI_OK)
+		DebugPrint(" QSPI Erase Block OK\r\n");
+	else
+		DebugPrint(" QSPI Erase Block FAIL\r\n");
+	HAL_Delay(10);
+
+	if (BSP_QSPI_Write(wData, 0x00, 0x100) == QSPI_OK)
+		DebugPrint(" QSPI Write OK\r\n");
+	else
+		DebugPrint(" QSPI Write FAIL\r\n");
+	HAL_Delay(10);
+
+	if (BSP_QSPI_Read(rData, 0x00, 0x100) == QSPI_OK)
+		DebugPrint(" QSPI Read OK\r\n");
+	else
+		DebugPrint(" QSPI Read FAIL\r\n");
+	HAL_Delay(10);
+
+#if 0
+	DebugPrint("QSPI Read Data : \r\n");
+	for (uint32_t i = 0; i < 0x100; i++) {
+		DebugPrint("0x%02X  ", rData[i]);
+		HAL_Delay(1);
+	}
+	DebugPrint("\r\n\r\n");
+
+	for (uint32_t i = 0; i < 0x100; i++) {
+		if (rData[i] != wData[i]) {
+			DebugPrint("0x%02X 0x%02X ", wData[i], rData[i]);
+			HAL_Delay(1);
+		}
+	}
+	DebugPrint("\r\n\r\n");
+	HAL_Delay(100);
+#endif
+	/* check date */
+	if (memcmp(wData, rData, 0x100) == 0)
+		DebugPrint(" W25Q128FV QuadSPI Test OK\r\n");
+	else
+		DebugPrint(" W25Q128FV QuadSPI Test FAIL\r\n");
+
 }
 /* USER CODE END 4 */
 
@@ -272,7 +437,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+	DebugPrint("\r\n Error Handler.\r\n");
   /* USER CODE END Error_Handler_Debug */
 }
 

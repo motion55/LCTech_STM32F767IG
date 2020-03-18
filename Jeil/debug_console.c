@@ -166,6 +166,7 @@ void debug_parse(char *cmd_line)
 		SDRAM_Test();
 		break;
 	case 'B':
+		W25Q_QUADSPI_Test();
 		break;
 	case 'C':  // compare
 		break;
