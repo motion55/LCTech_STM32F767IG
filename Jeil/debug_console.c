@@ -513,24 +513,27 @@ void debug_idle(void)
 #define	DEBUGTIMER	1
 #endif
 
+static char InDebug = 0;
+
 void DebugTask(void)
 {
-	if (dbg_rx_head!=dbg_rx_tail)
-	{
-		do {
-			char _rxchar = dbg_rx_buffer[dbg_rx_tail++];
-			if (dbg_rx_tail >= DBG_BUFFER_SIZE) dbg_rx_tail = 0;
-			debug_rcv(_rxchar);
-		} while (dbg_rx_head!=dbg_rx_tail);
-	}
-	else
-	{
-		StartTimer(DEBUGTIMER,50);
-		if (TimerOut(DEBUGTIMER))
-		{
-			ResetTimer(DEBUGTIMER);
-			debug_idle();
+	if (!InDebug) {
+		InDebug = 1;	//prevent recursion
+		if (dbg_rx_head != dbg_rx_tail) {
+			do {
+				char _rxchar = dbg_rx_buffer[dbg_rx_tail++];
+				if (dbg_rx_tail >= DBG_BUFFER_SIZE)
+					dbg_rx_tail = 0;
+				debug_rcv(_rxchar);
+			} while (dbg_rx_head != dbg_rx_tail);
+		} else {
+			StartTimer(DEBUGTIMER, 50);
+			if (TimerOut(DEBUGTIMER)) {
+				ResetTimer(DEBUGTIMER);
+				debug_idle();
+			}
 		}
+		InDebug = 0;
 	}
 	DoDebugSerial();
 }
@@ -589,5 +592,13 @@ inline char IsTest(void)
 {
 	return bTest;
 }
+
+/* redirect printf to debug port */
+int __io_putchar(int ch)
+{
+	DebugPutChar(ch);
+	return ch;
+}
+
 
 

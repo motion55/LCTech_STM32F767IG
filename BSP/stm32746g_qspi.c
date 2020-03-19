@@ -67,7 +67,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32746g_qspi.h"
 #include "quadspi.h"
-#include "debug_console.h"
+#include "stdio.h"
 /** @addtogroup BSP
  * @{
  */
@@ -242,27 +242,27 @@ uint8_t BSP_QSPI_Write(uint8_t *pData, uint32_t WriteAddr, uint32_t Size) {
 
 		/* Enable write operations */
 		if (QSPI_WriteEnable() != QSPI_OK) {
-			DebugPrint(" QSPI_WriteEnable FAIL\r\n");
+			printf(" QSPI_WriteEnable FAIL\r\n");
 			return QSPI_ERROR;
 		}
 
 		/* Configure the command */
 		if (HAL_QSPI_Command(&QSPIHandle, &s_command,
 				HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
-			DebugPrint(" Configure FAIL\r\n");
+			printf(" Configure FAIL\r\n");
 			return QSPI_ERROR;
 		}
 
 		/* Transmission of the data */
 		if (HAL_QSPI_Transmit(&QSPIHandle, pData,
 				HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
-			DebugPrint(" Transmission FAIL\r\n");
+			printf(" Transmission FAIL\r\n");
 			return QSPI_ERROR;
 		}
 
 		/* Configure automatic polling mode to wait for end of program */
 		if (QSPI_AutoPollingMemReady(HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != QSPI_OK) {
-			DebugPrint(" Configure automatic polling mode FAIL\r\n");
+			printf(" Configure automatic polling mode FAIL\r\n");
 			return QSPI_ERROR;
 		}
 

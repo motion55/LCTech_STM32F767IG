@@ -61,8 +61,6 @@ void W25Q_QUADSPI_Test(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define KEY_PB_Pin GPIO_PIN_0
-#define KEY_PB_GPIO_Port GPIOA
 #define LED_Out_Pin GPIO_PIN_11
 #define LED_Out_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
