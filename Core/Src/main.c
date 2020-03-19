@@ -238,7 +238,7 @@ void SDRAM_Test(void)
 //		HAL_Delay(2);
 //	}
 //	printf("\r\n");
-	HAL_Delay(200);
+	HAL_Delay(100);
 
 	/* Read back data from the SDRAM memory */
 	BSP_SDRAM_ReadData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aRxBuffer, BUFFER_SIZE);
@@ -248,7 +248,7 @@ void SDRAM_Test(void)
 //		HAL_Delay(2);
 //	}
 //	printf("\r\n");
-	HAL_Delay(200);
+	HAL_Delay(100);
 
 	/*##-3- Checking data integrity ############################################*/
 	for (int i = 0; (i < BUFFER_SIZE); i++) {
@@ -298,7 +298,7 @@ void W25Q_QUADSPI_Test(void)
 		printf("Read Manufacture/Device ID command receive1 fail.\r\n");
 		HAL_Delay(100);
 	}
-	printf("SPI I/0 Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
+	printf("-SPI I/0 Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
 	HAL_Delay(10);
 
 	/* Read Manufacture/Device ID Dual I/O*/
@@ -325,7 +325,7 @@ void W25Q_QUADSPI_Test(void)
 		printf("Read Manufacture/Device ID command receive2 fail.\r\n");
 		HAL_Delay(100);
 	}
-	printf("Dual I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
+	printf("-Dual I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
 	HAL_Delay(10);
 
 	/* Read Manufacture/Device ID Quad I/O*/
@@ -352,7 +352,7 @@ void W25Q_QUADSPI_Test(void)
 		printf("Read Manufacture/Device ID command receive3 fail.\r\n");
 		HAL_Delay(100);
 	}
-	printf("Quad I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
+	printf("-Quad I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
 	HAL_Delay(10);
 
 	/* Read JEDEC ID */
@@ -375,7 +375,7 @@ void W25Q_QUADSPI_Test(void)
 		printf("Read Manufacture/Device ID command receive4 fail.\r\n");
 		HAL_Delay(100);
 	}
-	printf("Read JEDEC ID :  0x%2X 0x%2X 0x%2X\r\n", pData[0], pData[1], pData[2]);
+	printf(" Read JEDEC ID :  0x%2X 0x%2X 0x%2X\r\n", pData[0], pData[1], pData[2]);
 	HAL_Delay(10);
 
 	/*##-3-QSPI Erase/Write/Read Test    ###########################################*/
@@ -408,7 +408,7 @@ void W25Q_QUADSPI_Test(void)
 		printf("0x%02X  ", rData[i]);
 		HAL_Delay(1);
 	}
-	printf("\r\n\r\n");
+	printf("\r\n");
 
 	for (uint32_t i = 0; i < 0x100; i++) {
 		if (rData[i] != wData[i]) {
@@ -416,15 +416,28 @@ void W25Q_QUADSPI_Test(void)
 			HAL_Delay(1);
 		}
 	}
-	printf("\r\n\r\n");
+	printf("\r\n");
 	HAL_Delay(100);
 #endif
 	/* check data */
+#if 1
+	uint8_t wdat;
+	uint8_t rdat;
+	for (uint16_t i = 0; i < BUFFER_SIZE; i++) {
+		wdat = wData[(uint8_t)i];
+		rdat = rData[(uint8_t)i];
+		if (wdat!=rdat) {
+			printf("At %3d Byte miss match between write=%02X & read=%02X \r\n", i, wdat, rdat);
+			HAL_Delay(10);
+			break;
+		}
+	}
+#else
 	if (memcmp(wData, rData, 0x100) == 0)
 		printf(" W25Q128FV QuadSPI Test OK\r\n");
 	else
 		printf(" W25Q128FV QuadSPI Test FAIL\r\n");
-
+#endif
 }
 /* USER CODE END 4 */
 

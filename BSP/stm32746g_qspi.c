@@ -224,9 +224,9 @@ uint8_t BSP_QSPI_Write(uint8_t *pData, uint32_t WriteAddr, uint32_t Size) {
 	end_addr = WriteAddr + Size;
 
 	/* Initialize the program command */
-	s_command.InstructionMode = QSPI_INSTRUCTION_4_LINES;
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = QUAD_INPUT_PAGE_PROG_CMD;
-	s_command.AddressMode = QSPI_INSTRUCTION_4_LINES;
+	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
 	s_command.DataMode = QSPI_DATA_4_LINES;
@@ -285,9 +285,9 @@ uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress) {
 	QSPI_CommandTypeDef s_command;
 
 	/* Initialize the erase command */
-	s_command.InstructionMode = QSPI_INSTRUCTION_4_LINES;
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = SECTOR_ERASE_CMD;
-	s_command.AddressMode = QSPI_ADDRESS_4_LINES;
+	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
 	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
 	s_command.Address = BlockAddress;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
