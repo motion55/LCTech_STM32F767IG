@@ -52,13 +52,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define BUFFER_SIZE         ((uint32_t)0x1000)
-#define WRITE_READ_ADDR     ((uint32_t)0x0800)
-/* Read/Write Buffers */
-uint32_t aTxBuffer[BUFFER_SIZE];
-uint32_t aRxBuffer[BUFFER_SIZE];
-/* Status variables */
-__IO uint32_t uwWriteReadStatus = 0;
 
 /* USER CODE END PV */
 
@@ -219,6 +212,14 @@ void HAL_Delay(uint32_t Delay)
 
 void SDRAM_Test(void)
 {
+	#define SDRAM_BUFFER_SIZE   ((uint32_t)0x1000)
+	#define WRITE_READ_ADDR     ((uint32_t)0x0800)
+	/* Read/Write Buffers */
+	uint32_t aTxBuffer[SDRAM_BUFFER_SIZE];
+	uint32_t aRxBuffer[SDRAM_BUFFER_SIZE];
+	/* Status variables */
+	__IO uint32_t uwWriteReadStatus = 0;
+
 	printf("\r\n SDRAM example !!!\r\n");
 	/* Program the SDRAM external device */
 	/*##-1- Configure the SDRAM device #########################################*/
@@ -226,12 +227,12 @@ void SDRAM_Test(void)
 
 	/*##-2- SDRAM memory read/write access #####################################*/
 	/* Fill the buffer to write */
-	for (int i = 0; i < BUFFER_SIZE; i++) {
+	for (int i = 0; i < SDRAM_BUFFER_SIZE; i++) {
 		aTxBuffer[i] = 0xC178A562 + i; /* TxBuffer init */
 	}
 
 	/* Write data to the SDRAM memory */
-	BSP_SDRAM_WriteData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aTxBuffer,	BUFFER_SIZE);
+	BSP_SDRAM_WriteData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aTxBuffer,	SDRAM_BUFFER_SIZE);
 	printf(" /* Write data to the SDRAM memory */\r\n");
 //	for (int i = 0; i < BUFFER_SIZE; i++) {
 //		printf("%02X:0x%08lX ", i, aTxBuffer[i]);
@@ -241,7 +242,7 @@ void SDRAM_Test(void)
 	HAL_Delay(100);
 
 	/* Read back data from the SDRAM memory */
-	BSP_SDRAM_ReadData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aRxBuffer, BUFFER_SIZE);
+	BSP_SDRAM_ReadData(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR, aRxBuffer, SDRAM_BUFFER_SIZE);
 	printf(" /* Read back data from the SDRAM memory */\r\n");
 //	for (int i = 0; i < BUFFER_SIZE; i++) {
 //		printf("%02X:0x%08lX ", i, aRxBuffer[i]);
@@ -251,7 +252,7 @@ void SDRAM_Test(void)
 	HAL_Delay(100);
 
 	/*##-3- Checking data integrity ############################################*/
-	for (int i = 0; (i < BUFFER_SIZE); i++) {
+	for (int i = 0; (i < SDRAM_BUFFER_SIZE); i++) {
 		if (aRxBuffer[i] != aTxBuffer[i]) {
 			uwWriteReadStatus++;
 		}
@@ -264,9 +265,11 @@ void SDRAM_Test(void)
 
 void W25Q_QUADSPI_Test(void)
 {
+	#define	QSPI_BUFFER_SIZE	0x100
+
 	QSPI_CommandTypeDef s_command;
-	uint8_t wData[0x100];
-	uint8_t rData[0x100];
+	uint8_t wData[QSPI_BUFFER_SIZE];
+	uint8_t rData[QSPI_BUFFER_SIZE];
 	uint8_t pData[3];
 
 	/*##-1- Initialize W25Q128FV  ###########################################*/
@@ -423,9 +426,9 @@ void W25Q_QUADSPI_Test(void)
 #if 1
 	uint8_t wdat;
 	uint8_t rdat;
-	for (uint16_t i = 0; i < BUFFER_SIZE; i++) {
-		wdat = wData[(uint8_t)i];
-		rdat = rData[(uint8_t)i];
+	for (uint16_t i = 0; i < QSPI_BUFFER_SIZE; i++) {
+		wdat = wData[i];
+		rdat = rData[i];
 		if (wdat!=rdat) {
 			printf("At %3d Byte miss match between write=%02X & read=%02X \r\n", i, wdat, rdat);
 			HAL_Delay(10);
