@@ -15,6 +15,8 @@
 #ifndef _JEIL_DEBUG_H_
 #define _JEIL_DEBUG_H_
 
+#include "usbd_def.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -34,6 +36,8 @@ void DebugPrint(const char *format, ...);
 void DoDebugSerial(void);
 
 char IsTest(void);
+
+uint8_t USB_SOF(USBD_HandleTypeDef *pdev);
 
 #ifdef __cplusplus
 }

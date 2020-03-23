@@ -75,7 +75,7 @@ void DebugPutChar(char ch);
 void DebugSend(char *message);
 
 
-uint8_t USB_Receive_HS(uint8_t* Buf, uint16_t length)
+uint8_t USB_Receive(uint8_t* Buf, uint16_t length)
 {
 	for (uint16_t _i = 0; _i<length; _i++) {
 		dbg_rx_buffer[dbg_rx_head++] = Buf[_i];
@@ -85,7 +85,6 @@ uint8_t USB_Receive_HS(uint8_t* Buf, uint16_t length)
 			if (dbg_rx_tail >= DBG_BUFFER_SIZE) dbg_rx_tail = 0;
 		}
 	}
-
 	return USBD_OK;
 }
 
@@ -515,6 +514,8 @@ void debug_idle(void)
 
 static char InDebug = 0;
 
+#define	_USE_SOF_	0
+
 void DebugTask(void)
 {
 	if (!InDebug) {
@@ -535,7 +536,9 @@ void DebugTask(void)
 		}
 		InDebug = 0;
 	}
+#if (_USE_SOF_==0)
 	DoDebugSerial();
+#endif
 }
 
 void DebugPutChar(char ch)
@@ -570,7 +573,7 @@ void DebugPrint(const char *format, ...)
 	DebugSend(debug_result);
 }
 
-
+extern uint8_t USB_Transmit(uint8_t* Buf, uint16_t Len);
 uint8_t IT_tx_buffer[DBG_BUFFER_SIZE];
 int16_t	IT_tx_buffer_len;
 
@@ -584,7 +587,7 @@ void DoDebugSerial(void)
 			IT_tx_buffer[_i] = dbg_tx_buffer[dbg_tx_tail++];
 			if (dbg_tx_tail >= DBG_BUFFER_SIZE) dbg_tx_tail = 0;
 		}
-		CDC_Transmit_HS(IT_tx_buffer, IT_tx_buffer_len);
+		USB_Transmit(IT_tx_buffer, IT_tx_buffer_len);
 	}
 }
 
@@ -600,5 +603,13 @@ int __io_putchar(int ch)
 	return ch;
 }
 
+uint8_t USB_SOF(USBD_HandleTypeDef *pdev)
+{
+#if _USE_SOF_
+	DoDebugSerial();
+#endif
+
+	return USBD_OK;
+}
 
 
