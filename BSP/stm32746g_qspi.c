@@ -156,6 +156,83 @@ uint8_t BSP_QSPI_Init(void) {
 	return QSPI_OK;
 }
 
+uint8_t BSP_QSPI_Read_Device_ID(uint8_t read_cmd, uint8_t *pData) {
+	QSPI_CommandTypeDef s_command;
+
+	switch (read_cmd) {
+	default:
+	case READ_ID_CMD:
+		/* SPI Read Manufacture/Device ID */
+		s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+		s_command.Instruction = READ_ID_CMD;
+		s_command.AddressMode = QSPI_ADDRESS_1_LINE;
+		s_command.AddressSize = W25Q_ADDRESS_BITS;
+		s_command.Address = 0x000000;
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+		s_command.DataMode = QSPI_DATA_1_LINE;
+		s_command.DummyCycles = 0;
+		s_command.NbData = 2;
+		s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+		s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+		s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+		break;
+	case DUAL_READ_ID_CMD:
+		/* Read Manufacture/Device ID Dual I/O*/
+		s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+		s_command.Instruction = DUAL_READ_ID_CMD;
+		s_command.AddressMode = QSPI_ADDRESS_2_LINES;
+		s_command.AddressSize = W25Q_ADDRESS_BITS;
+		s_command.Address = 0x000000;
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_2_LINES;
+		s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+		s_command.AlternateBytes = 0;
+		s_command.DataMode = QSPI_DATA_2_LINES;
+		s_command.DummyCycles = 0;
+		s_command.NbData = 2;
+		s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+		s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+		s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+		break;
+	case QUAD_READ_ID_CMD:
+		/* Read Manufacture/Device ID Quad I/O*/
+		s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+		s_command.Instruction = QUAD_READ_ID_CMD;
+		s_command.AddressMode = QSPI_ADDRESS_4_LINES;
+		s_command.AddressSize = W25Q_ADDRESS_BITS;
+		s_command.Address = 0x000000;
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
+		s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+		s_command.AlternateBytes = 0;
+		s_command.DataMode = QSPI_DATA_4_LINES;
+		s_command.DummyCycles = 4;
+		s_command.NbData = 2;
+		s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+		s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+		s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+		break;
+	case READ_JEDEC_ID_CMD:
+		/* Read JEDEC ID */
+		s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+		s_command.Instruction = READ_JEDEC_ID_CMD;
+		s_command.AddressMode = QSPI_ADDRESS_NONE;
+		s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+		s_command.DataMode = QSPI_DATA_1_LINE;
+		s_command.DummyCycles = 0;
+		s_command.NbData = 3;
+		s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+		s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+		s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+		break;
+	}
+	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		return QSPI_ERROR;
+	}
+	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
+		return QSPI_ERROR;
+	}
+	return QSPI_OK;
+}
+
 #define	_FAST_READ_QUAD_IO_ 	1
 #define	_FAST_READ_QUAD_OUT_	1
 

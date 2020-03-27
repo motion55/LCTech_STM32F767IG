@@ -112,6 +112,7 @@ uint8_t BSP_QSPI_Erase_Chip (void);
 uint8_t BSP_QSPI_GetStatus  (void);
 uint8_t BSP_QSPI_GetInfo    (QSPI_Info* pInfo);
 uint8_t BSP_QSPI_MemoryMappedMode(void);
+uint8_t BSP_QSPI_Read_Device_ID(uint8_t JEDEC_ID, uint8_t *pData);
 
 
 /**
