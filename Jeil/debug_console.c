@@ -22,6 +22,7 @@
 #include "debug_console.h"
 #include "Timer.h"
 #include "usbd_cdc_if.h"
+#include "stm32746g_qspi.h"
 
 #ifndef EOF
 #define EOF (-1)            /* End of file indicator */
@@ -168,6 +169,9 @@ void debug_parse(char *cmd_line)
 		W25Q_QUADSPI_Test();
 		break;
 	case 'C':  // compare
+		DebugSend("\r\n Entering Memory Mapped Mode.");
+		HAL_Delay(10);
+		BSP_QSPI_MemoryMappedMode();
 		break;
 	case 'D':  // dump
 		params = sscanf(cmd_line,"%lx %lx",&temp2,&temp3);
