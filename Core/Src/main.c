@@ -283,7 +283,7 @@ void W25Q_QUADSPI_Test(void)
 	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = READ_ID_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
-	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
 	s_command.Address = 0x000000;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
 	s_command.DataMode = QSPI_DATA_1_LINE;
@@ -308,24 +308,24 @@ void W25Q_QUADSPI_Test(void)
 	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = DUAL_READ_ID_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_2_LINES;
-	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
 	s_command.Address = 0x000000;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_2_LINES;
 	s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
 	s_command.AlternateBytes = 0;
 	s_command.DataMode = QSPI_DATA_2_LINES;
 	s_command.DummyCycles = 0;
-	s_command.NbData = 4;
+	s_command.NbData = 2;
 	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
 	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
 	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
 
 	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
-		printf("Read Manufacture/Device ID command send2 fail.\r\n");
+		printf("Dual Read Device ID command send fail.\r\n");
 		HAL_Delay(100);
 	}
 	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
-		printf("Read Manufacture/Device ID command receive2 fail.\r\n");
+		printf("Dual Read Device ID command recv fail.\r\n");
 		HAL_Delay(100);
 	}
 	printf("-Dual I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
@@ -335,11 +335,11 @@ void W25Q_QUADSPI_Test(void)
 	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = QUAD_READ_ID_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_4_LINES;
-	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
 	s_command.Address = 0x000000;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
 	s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
-	s_command.AlternateBytes = 0x00;
+	s_command.AlternateBytes = 0;
 	s_command.DataMode = QSPI_DATA_4_LINES;
 	s_command.DummyCycles = 4;
 	s_command.NbData = 2;
@@ -348,11 +348,11 @@ void W25Q_QUADSPI_Test(void)
 	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
 
 	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
-		printf("Read Manufacture/Device ID command send3 fail.\r\n");
+		printf("Quad I/O Read Device ID command send fail.\r\n");
 		HAL_Delay(100);
 	}
 	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
-		printf("Read Manufacture/Device ID command receive3 fail.\r\n");
+		printf("Quad I/O Read Device ID command recv fail.\r\n");
 		HAL_Delay(100);
 	}
 	printf("-Quad I/O Read Device ID : 0x%2X 0x%2X\r\n", pData[0], pData[1]);
@@ -371,11 +371,11 @@ void W25Q_QUADSPI_Test(void)
 	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
 
 	if (HAL_QSPI_Command(&hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
-		printf("Read Manufacture/Device ID command send4 fail.\r\n");
+		printf("Read JEDEC ID command send fail.\r\n");
 		HAL_Delay(100);
 	}
 	if (HAL_QSPI_Receive(&hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)!= HAL_OK) {
-		printf("Read Manufacture/Device ID command receive4 fail.\r\n");
+		printf("Read JEDEC ID command recv fail.\r\n");
 		HAL_Delay(100);
 	}
 	printf(" Read JEDEC ID :  0x%2X 0x%2X 0x%2X\r\n", pData[0], pData[1], pData[2]);
@@ -426,15 +426,21 @@ void W25Q_QUADSPI_Test(void)
 #if 1
 	uint8_t wdat;
 	uint8_t rdat;
+	uint8_t verify=1;
 	for (uint16_t i = 0; i < QSPI_BUFFER_SIZE; i++) {
 		wdat = wData[i];
 		rdat = rData[i];
 		if (wdat!=rdat) {
 			printf("At %3d Byte miss match between write=%02X & read=%02X \r\n", i, wdat, rdat);
 			HAL_Delay(10);
+			verify = 0;
 			break;
 		}
 	}
+	if (verify)
+		printf(" QSPI Verify OK\r\n");
+	else
+		printf(" QSPI Verify FAIL\r\n");
 #else
 	if (memcmp(wData, rData, 0x100) == 0)
 		printf(" W25Q128FV QuadSPI Test OK\r\n");

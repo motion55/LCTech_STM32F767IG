@@ -156,6 +156,9 @@ uint8_t BSP_QSPI_Init(void) {
 	return QSPI_OK;
 }
 
+#define	_FAST_READ_QUAD_IO_ 	1
+#define	_FAST_READ_QUAD_OUT_	1
+
 /**
  * @brief  Reads an amount of data from the QSPI memory.
  * @param  pData: Pointer to data to be read
@@ -165,21 +168,51 @@ uint8_t BSP_QSPI_Init(void) {
  */
 uint8_t BSP_QSPI_Read(uint8_t *pData, uint32_t ReadAddr, uint32_t Size) {
 	QSPI_CommandTypeDef s_command;
-
+#if _FAST_READ_QUAD_IO_
+	/* Initialize the read command */
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	s_command.Instruction = QUAD_INOUT_FAST_READ_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_4_LINES;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
+	s_command.Address = ReadAddr;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
+	s_command.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
+	s_command.AlternateBytes = 0xF0;
+	s_command.DataMode = QSPI_DATA_4_LINES;
+	s_command.DummyCycles = 4;
+	s_command.NbData = Size;
+	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+#elif _FAST_READ_QUAD_OUT_
+	/* Initialize the read command */
+	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+	s_command.Instruction = QUAD_OUT_FAST_READ_CMD;
+	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
+	s_command.Address = ReadAddr;
+	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+	s_command.DataMode = QSPI_DATA_4_LINES;
+	s_command.DummyCycles = 8;
+	s_command.NbData = Size;
+	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
+	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+#else
 	/* Initialize the read command */
 	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = READ_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
-	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
 	s_command.Address = ReadAddr;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-	s_command.DataMode = QSPI_DATA_1_LINE;
+	s_command.DataMode = QSPI_DATA_1_LINE;	//READ cmd is only supported in SPI mode
 	s_command.DummyCycles = 0;
 	s_command.NbData = Size;
 	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
 	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
 	s_command.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
-
+#endif
 	/* Configure the command */
 	if (HAL_QSPI_Command(&QSPIHandle, &s_command,
 			HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
@@ -227,9 +260,9 @@ uint8_t BSP_QSPI_Write(uint8_t *pData, uint32_t WriteAddr, uint32_t Size) {
 	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = QUAD_INPUT_PAGE_PROG_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
-	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-	s_command.DataMode = QSPI_DATA_4_LINES;
+	s_command.DataMode = W25Q_DATA_BITS;
 	s_command.DummyCycles = 0;
 	s_command.DdrMode = QSPI_DDR_MODE_DISABLE;
 	s_command.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
@@ -288,7 +321,7 @@ uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress) {
 	s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
 	s_command.Instruction = SECTOR_ERASE_CMD;
 	s_command.AddressMode = QSPI_ADDRESS_1_LINE;
-	s_command.AddressSize = QSPI_ADDRESS_24_BITS;
+	s_command.AddressSize = W25Q_ADDRESS_BITS;
 	s_command.Address = BlockAddress;
 	s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
 	s_command.DataMode = QSPI_DATA_NONE;

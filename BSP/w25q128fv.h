@@ -68,7 +68,9 @@
 /** @defgroup W25Q128FV_Exported_Constants
   * @{
   */
-   
+#define W25Q_ADDRESS_BITS	QSPI_ADDRESS_24_BITS
+#define W25Q_DATA_BITS   	QSPI_DATA_4_LINES
+
 /** 
   * @brief  W25Q128FV Configuration  
   */  
