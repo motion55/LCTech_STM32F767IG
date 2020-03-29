@@ -96,7 +96,7 @@ void Calc_Time_of_Day(void)
 	if (LED_tick<=0)
 	{
 		LED_tick += TIMER_Hz/2;
-		HAL_GPIO_TogglePin(LED_Out_GPIO_Port, LED_Out_Pin);
+		//HAL_GPIO_TogglePin(LED_Out_GPIO_Port, LED_Out_Pin);
 	}
 	#ifdef _TimerTask
 	_TimerTask;

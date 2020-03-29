@@ -518,7 +518,7 @@ void debug_idle(void)
 
 static char InDebug = 0;
 
-#define	_USE_SOF_	0
+#define	_USE_SOF_	1
 
 void DebugTask(void)
 {
@@ -545,14 +545,22 @@ void DebugTask(void)
 #endif
 }
 
+volatile uint8_t USB_Lock = 0;
+
 void DebugPutChar(char ch)
 {
+#if _USE_SOF_
+	USB_Lock = 1;
+#endif
 	dbg_tx_buffer[dbg_tx_head++] = ch;
 	if (dbg_tx_head>=DBG_BUFFER_SIZE) dbg_tx_head = 0;
 	if (dbg_tx_head==dbg_tx_tail) {
 		dbg_tx_tail++;	//discard oldest
 		if (dbg_tx_tail>=DBG_BUFFER_SIZE) dbg_tx_tail = 0;
 	}
+#if _USE_SOF_
+	USB_Lock = 0;
+#endif
 }
 
 void DebugSend(char *message)
@@ -583,6 +591,9 @@ int16_t	IT_tx_buffer_len;
 
 void DoDebugSerial(void)
 {
+#if _USE_SOF_
+	if (USB_Lock) return;
+#endif
 	if (dbg_tx_head!=dbg_tx_tail)
 	{
 		IT_tx_buffer_len = dbg_tx_head - dbg_tx_tail;
@@ -607,11 +618,15 @@ int __io_putchar(int ch)
 	return ch;
 }
 
+volatile uint8_t SOF_Count = 0;
+
 uint8_t USB_SOF(USBD_HandleTypeDef *pdev)
 {
 #if _USE_SOF_
 	DoDebugSerial();
 #endif
+	if (SOF_Count++==0)
+		HAL_GPIO_TogglePin(LED_Out_GPIO_Port, LED_Out_Pin);
 
 	return USBD_OK;
 }
