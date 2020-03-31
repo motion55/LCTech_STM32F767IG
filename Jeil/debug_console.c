@@ -148,6 +148,8 @@ unsigned int do_dump(void)
 	return (_debug_dump_beg);
 }
 
+extern const unsigned char _dsc00962[];
+
 void debug_parse(char *cmd_line)
 {
 	int params;
@@ -172,6 +174,9 @@ void debug_parse(char *cmd_line)
 		DebugSend("\r\n Entering Memory Mapped Mode.");
 		HAL_Delay(10);
 		BSP_QSPI_MemoryMappedMode();
+		_debug_dump_beg = (uint32_t)&_dsc00962[0];
+		_debug_dump_end = _debug_dump_beg + 127;
+		do_dump();
 		break;
 	case 'D':  // dump
 		params = sscanf(cmd_line,"%lx %lx",&temp2,&temp3);
@@ -208,7 +213,8 @@ void debug_parse(char *cmd_line)
 			break;
 		default:
 			{
-				DebugSend(" ?? \r\n");
+				temp4 = (uint32_t)&_dsc00962[0];
+				DebugPrint("\r\n _dsc00962 address = %08lX", temp4);
 			}
 			break;
 		}
@@ -216,6 +222,7 @@ void debug_parse(char *cmd_line)
 	case 'G':  // go
 		break;
 	case 'H':  // hex
+		W25Q_QUADSPI_Erase();
 		break;
 	case 'I':  // read byte
 		if (sscanf(cmd_line,"%lx",&temp1)==1)

@@ -56,6 +56,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 void SDRAM_Test(void);
+void W25Q_QUADSPI_Erase(void);
 void W25Q_QUADSPI_Test(void);
 
 /* USER CODE END EFP */

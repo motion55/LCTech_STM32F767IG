@@ -20,12 +20,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
+#include "crc.h"
+#include "dma2d.h"
 #include "eth.h"
 #include "ltdc.h"
 #include "quadspi.h"
 #include "usb_device.h"
 #include "gpio.h"
 #include "fmc.h"
+#include "app_touchgfx.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,6 +61,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -98,7 +103,9 @@ int main(void)
   MX_ETH_Init();
   MX_FMC_Init();
   MX_QUADSPI_Init();
-  MX_USB_DEVICE_Init();
+  MX_CRC_Init();
+  MX_DMA2D_Init();
+  MX_TouchGFX_Init();
   /* USER CODE BEGIN 2 */
   /* SDRAM device configuration */
   BSP_SDRAM_Init();
@@ -107,6 +114,12 @@ int main(void)
 #endif
   /* USER CODE END 2 */
 
+  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init(); 
+  /* Start scheduler */
+  osKernelStart();
+ 
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -263,6 +276,15 @@ void SDRAM_Test(void)
 		printf(" SDRAM Test False\r\n");
 }
 
+void W25Q_QUADSPI_Erase(void)
+{
+	if (BSP_QSPI_Erase_Block(0) == QSPI_OK)
+		printf(" QSPI Erase Block OK\r\n");
+	else
+		printf(" QSPI Erase Block FAIL\r\n");
+	HAL_Delay(10);
+}
+
 void W25Q_QUADSPI_Test(void)
 {
 	#define	QSPI_BUFFER_SIZE	0x100
@@ -356,6 +378,27 @@ void W25Q_QUADSPI_Test(void)
 #endif
 }
 /* USER CODE END 4 */
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM7 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM7) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
