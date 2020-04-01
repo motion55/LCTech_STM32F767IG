@@ -174,9 +174,9 @@ void debug_parse(char *cmd_line)
 		DebugSend("\r\n Entering Memory Mapped Mode.");
 		HAL_Delay(10);
 		BSP_QSPI_MemoryMappedMode();
-		_debug_dump_beg = (uint32_t)&_dsc00962[0];
-		_debug_dump_end = _debug_dump_beg + 127;
-		do_dump();
+		//_debug_dump_beg = (uint32_t)&_dsc00962[0];
+		//_debug_dump_end = _debug_dump_beg + 127;
+		//do_dump();
 		break;
 	case 'D':  // dump
 		params = sscanf(cmd_line,"%lx %lx",&temp2,&temp3);
@@ -213,8 +213,8 @@ void debug_parse(char *cmd_line)
 			break;
 		default:
 			{
-				temp4 = (uint32_t)&_dsc00962[0];
-				DebugPrint("\r\n _dsc00962 address = %08lX", temp4);
+				//temp4 = (uint32_t)&_dsc00962[0];
+				//DebugPrint("\r\n _dsc00962 address = %08lX", temp4);
 			}
 			break;
 		}
